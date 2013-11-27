@@ -6,16 +6,18 @@
   <link rel="stylesheet" href="css/app.css"/>
 </head>
 <body>
-    ライフゲーム
+    <h1>ライフゲーム</h1>
 
     <div ng-controller="Lifegame">
-        <input type="text" ng-model="width">
-        <input type="text" ng-model="height">
+        幅<input type="text" ng-model="width">
+        高さ<input type="text" ng-model="height">
+
+        <button ng-click="next()">次に進む</button>
         <table>
-            <tr ng-repeat="r in integers(1, 3)">
-                <td>{{r}}</td>
-                <td>{{r+1}}</td>
-                <td>{{r+2}}</td>
+            <tr ng-repeat="y in integers(0, height)">
+                <td ng-repeat="x in integers(0, width)">
+                    {{ isAlive(x, y) ? '■' : '□' }}
+                </td>
             </tr>
         </table>
     </div>
