@@ -13,6 +13,9 @@
         高さ<input type="text" ng-model="height">
 
         <button ng-click="next()">次に進む</button>
+
+        <p>生きてる人たち： {{ num() }}</p>
+
         <table>
             <tr ng-repeat="y in integers(0, height)">
                 <td ng-repeat="x in integers(0, width)">
