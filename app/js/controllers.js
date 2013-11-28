@@ -1,26 +1,46 @@
 'use strict';
 
-
-function comparePoint(lhs, rhs) {
-    if( !lhs && !rhs){
+function point(x, y) {
+    return new function() {
+        this.x = x;
+        this.y = y;
+        this.equals = function(that){
+            return point.compare(this, that) === 0;
+        }
+        this.surround = function() {
+            return [
+                point(x-1, y-1), point(x, y-1), point(x+1, y-1),
+                point(x-1, y),                  point(x+1, y),
+                point(x-1, y+1), point(x, y+1), point(x+1, y+1)
+            ];
+        }
+        this.toString = function() {
+            return "("+x+ ", "+y+")";
+        }
+    };
+}
+point.compare = function(lhs, rhs) {
+    if( lhs && rhs ){
+        if( lhs.x === rhs.x && lhs.y === rhs.y ){
+            return 0;
+        }else if( lhs.x < rhs.x ) {
+            return -1;
+        }else{
+            return (lhs.y < rhs.y) ? -1 : 1;
+        }
+    } else if ( !lhs && !rhs ){
         return 0;
-    }else if( !lhs ){
-        return -1;
-    }else if( !rhs ){
-        return 1;
-    }else if( lhs.x === rhs.x && lhs.y === rhs.y ){
-        return 0;
-    }else if( lhs.x < rhs.x ) {
-        return -1;
-    }else{
-        return (lhs.y < rhs.y) ? -1 : 1;
+    } else {
+        return (!lhs) ? -1 : 1;
     }
 }
-
-function uniq(list, comparator) {
+point.toString = function(array) {
+    return _(array).invoke('toString').join(',');
+}
+point.uniq = function(array) {
     var last = null;
-    return list.sort(comparator).reduce(function(acc, item) {
-        if( comparator(last, item) === 0 ){
+    return array.sort(point.compare).reduce(function(acc, item) {
+        if( point.compare(last, item) === 0 ){
             return acc;
         } else {
             last = item;
@@ -28,119 +48,80 @@ function uniq(list, comparator) {
         }
     }, []);
 }
-function point(X, Y) {
-    return { x:X, y:Y };
-}
-function integers(from, to) {
-    var ret = [];
-    for( var i=0, len=to-from; i<len; i++ ){
-        ret[i] = from + i;
-    }
-    return ret;
-}
-function flatten(listOfList) {
-    return listOfList.reduce(function(acc, ls) {
-        return acc.concat(ls);
-    }, [] );
-}
-
-function surround( pt ) {
-    return [
-        {x:pt.x-1, y:pt.y-1}, {x:pt.x, y:pt.y-1}, {x:pt.x+1, y:pt.y-1},
-        {x:pt.x-1, y:pt.y},                        {x:pt.x+1, y:pt.y},
-        {x:pt.x-1, y:pt.y+1}, {x:pt.x, y:pt.y+1}, {x:pt.x+1, y:pt.y+1}
-    ];
-}
 
 function World(alives) {
     this.alives = alives;
-    this.isAliveAt = function(there) {
-        var n = this.alives.filter( function(pt){
-            return pt.x == there.x && pt.y == there.y;
-        }).length;
-        return n > 0;
-    }
 
+    this.isAliveAt = function(there) {
+        return _(this.alives).any( there.equals.bind(there) );
+    }
     this.countAliveCell = function(cells) {
         var me = this;
-        var n = cells.reduce( function(acc, pt) {
-            return ( me.isAliveAt(pt) ) ? acc + 1 : acc;
-        }, 0 );
-        return n;
+        return _(cells).select(function(pt) {
+            return me.isAliveAt(pt);
+        }).length;
     }
-
-    this.willAlive = function(cell) {
-        var n = this.countAliveCell( surround(cell) );
-        return n === 2 || n === 3;
-    }
-    this.willSpawn = function(cell) {
-        var n = this.countAliveCell( surround(cell) );
-        return n === 3;
+    this.canAlive = function(cell) {
+        var willAlive = function(n){ return n===2 || n===3 };
+        var willSpawn = function(n){ return n===3 };
+        var n = this.countAliveCell( cell.surround() );
+        return ( this.isAliveAt(cell) ) ? willAlive(n) : willSpawn(n);
     }
     this.next = function() {
-        var cmp = comparePoint;
-        var temp = flatten( this.alives.map(function(cell){
-            return surround(cell);
-        }));
-        var target = uniq(temp, comparePoint);
-        var me = this;
-        var nextAges = target.filter(function(cell){
-            if( me.isAliveAt(cell) ){
-                return me.willAlive(cell);
-            } else {
-                return me.willSpawn(cell);
-            }
-        });
-        this.alives = nextAges;
+        var target = point.uniq(
+            _.chain(this.alives)
+            .invoke('surround')
+            .flatten()
+            .value()
+        );
+        var canAlive = this.canAlive.bind(this);
+        this.replase( _(target).select(canAlive) );
     }
-
+    this.replase = function(newAge) {
+        this.alives = point.uniq(newAge);
+    }
     this.invert = function(cell) {
-        if( this.isAliveAt(cell) ) {
-            this.alives = this.alives.filter(function(pt) {
-                return comparePoint(pt, cell) != 0;
-            });
-        } else {
-            this.alives.push(cell);
-        }
+        var newAge = ( this.isAliveAt(cell) )
+        ? _(this.alives).reject(function(pt){ return pt.equals(cell); })
+        : this.alives.concat(cell);
+
+        this.replase(newAge);
     }
 }
 
 /* Controllers */
 
 angular.module('myApp.controllers', []).
-  controller('MyCtrl1', [function() {
-
-  }])
-  .controller('MyCtrl2', [function() {
-
-  }])
-  .controller('Lifegame', function($scope, $interval){
+  controller('Lifegame', function($scope, $interval){
       $scope.width  = 15;
       $scope.height = 20;
 
-      $scope.integers = integers;
+      $scope.range = function(n) { return _.range(n); }
 
       var world = new World( [
           point(10, 14), point(11, 14), point(12, 14),
           point(10, 15), point(11, 16),
           ] );
+
+      $scope.world = world;
+
       $scope.isAlive = function(x, y) {
           return world.isAliveAt(point(x, y));
-      };
-
-      $scope.next = function() {
-          world.next();
-      };
-
-      $scope.num = function() {
-          return world.alives.length;
-      };
-
-      $scope.start = function() {
-          $interval(world.next.bind(world), 500);
       };
 
       $scope.invert = function(x, y) {
           world.invert(point(x, y));
       };
+
+      var promise = undefined;
+      $scope.start = function() {
+          if( typeof(promise) === 'undefined' ){
+              promise = $interval(world.next.bind(world), 500);
+          }
+      };
+      $scope.pause = function() {
+          $interval.cancel(promise);
+          promise = undefined;
+      }
+
   });
