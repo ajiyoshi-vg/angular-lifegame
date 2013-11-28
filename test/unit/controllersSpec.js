@@ -32,9 +32,9 @@ describe('controllers', function(){
   }));
 
   it('should セルのリストのうち生きているものを数える', inject(function() {
-      var cells =  surround( {x:1, y:2} ) ;
+      var cells =  surround( point(1, 2) ) ;
       var world = new World( [
-          {x:0, y:1}, {x:1, y:1}
+          point(0, 1), point(1, 1)
       ] );
       expect( world.countAliveCell(cells) ).toBe( 2 );
       expect( world.countAliveCell([ point(0, 1) ]) ).toBe( 1 );

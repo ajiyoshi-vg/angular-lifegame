@@ -20,7 +20,6 @@ function comparePoint(lhs, rhs) {
 function uniq(list, comparator) {
     var last = null;
     return list.sort(comparator).reduce(function(acc, item) {
-        console.log(acc);
         if( comparator(last, item) === 0 ){
             return acc;
         } else {
@@ -39,7 +38,6 @@ function integers(from, to) {
     }
     return ret;
 }
-
 function flatten(listOfList) {
     return listOfList.reduce(function(acc, ls) {
         return acc.concat(ls);
@@ -57,10 +55,10 @@ function surround( pt ) {
 function World(alives) {
     this.alives = alives;
     this.isAliveAt = function(there) {
-        var n = this.alives.filter(function(pt){
+        var n = this.alives.filter( function(pt){
             return pt.x == there.x && pt.y == there.y;
         }).length;
-       return n > 0;
+        return n > 0;
     }
 
     this.countAliveCell = function(cells) {
@@ -95,6 +93,16 @@ function World(alives) {
         });
         this.alives = nextAges;
     }
+
+    this.invert = function(cell) {
+        if( this.isAliveAt(cell) ) {
+            this.alives = this.alives.filter(function(pt) {
+                return comparePoint(pt, cell) != 0;
+            });
+        } else {
+            this.alives.push(cell);
+        }
+    }
 }
 
 /* Controllers */
@@ -106,14 +114,15 @@ angular.module('myApp.controllers', []).
   .controller('MyCtrl2', [function() {
 
   }])
-  .controller('Lifegame', function($scope){
-      $scope.width = 10;
-      $scope.height = 8;
+  .controller('Lifegame', function($scope, $interval){
+      $scope.width  = 15;
+      $scope.height = 20;
 
       $scope.integers = integers;
 
       var world = new World( [
-          point(1, 2), point(1, 3), point(1, 4)
+          point(10, 14), point(11, 14), point(12, 14),
+          point(10, 15), point(11, 16),
           ] );
       $scope.isAlive = function(x, y) {
           return world.isAliveAt(point(x, y));
@@ -125,5 +134,13 @@ angular.module('myApp.controllers', []).
 
       $scope.num = function() {
           return world.alives.length;
-      }
+      };
+
+      $scope.start = function() {
+          $interval(world.next.bind(world), 500);
+      };
+
+      $scope.invert = function(x, y) {
+          world.invert(point(x, y));
+      };
   });
