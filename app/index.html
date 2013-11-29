@@ -12,15 +12,15 @@
         幅<input type="text" ng-model="width">
         高さ<input type="text" ng-model="height">
 
-        <button ng-click="world.next()">次に進む</button>
+        <button ng-click="next()">次に進む</button>
         <button ng-click="start()">動く</button>
         <button ng-click="pause()">止める</button>
 
         <table>
             <tr ng-repeat="y in range(height)">
                 <td ng-repeat="x in range(width)"
-                    ng-click="invert(x, y)">
-                    {{ isAlive(x, y) ? '■' : '□' }}
+                    ng-click="invert(x, y)"
+                    ng-class="{alive: isAlive(x, y)}">
                 </td>
             </tr>
         </table>

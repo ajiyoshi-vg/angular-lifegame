@@ -28,3 +28,8 @@
   content: "";
   padding: 0;
 }
+
+table, tr, td { margin:0; padding:0; }
+td { width:10px; height:10px; border:1px solid #888; }
+td.alive { background-color: black; }
+td { cursor:pointer; }

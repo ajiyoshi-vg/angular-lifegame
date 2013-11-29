@@ -93,17 +93,18 @@ function World(alives) {
 
 angular.module('myApp.controllers', []).
   controller('Lifegame', function($scope, $interval){
-      $scope.width  = 15;
-      $scope.height = 20;
+      $scope.width  = 30;
+      $scope.height = 30;
 
       $scope.range = function(n) { return _.range(n); }
 
       var world = new World( [
-          point(10, 14), point(11, 14), point(12, 14),
-          point(10, 15), point(11, 16),
+          point(21, 12),
+          point(20, 14), point(21, 14), point(22, 14),
+          point(15, 13), point(16, 13), point(16, 14),
           ] );
 
-      $scope.world = world;
+      $scope.next = world.next.bind(world);
 
       $scope.isAlive = function(x, y) {
           return world.isAliveAt(point(x, y));
