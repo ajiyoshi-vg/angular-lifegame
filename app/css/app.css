@@ -31,5 +31,7 @@
 
 table, tr, td { margin:0; padding:0; }
 td { width:10px; height:10px; border:1px solid #888; }
-td.alive { background-color: black; }
 td { cursor:pointer; }
+td.alive { background-color: black; }
+td:hover { background-color: #888; }
+td.alive:hover { background-color: #CCC; }
